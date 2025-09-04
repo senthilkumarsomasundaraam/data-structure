@@ -48,7 +48,7 @@ class Friends(Iterator):
 
         else:
             # handle edge case when input is an empty directory
-            # It should be empty array initiated but persons should be plural
+            # It should be empty array initiated but person should be plural
             #self.person = []
             self.persons = []
 
