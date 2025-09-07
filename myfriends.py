@@ -8,7 +8,7 @@ Notes:
 - you should create and test your own scenarios to fully test your functions, 
   including testing of "edge cases"
 """
-
+from fileinput import filename
 from py_friends.friends import Friends
 
 """
@@ -20,8 +20,8 @@ from py_friends.friends import Friends
 
 If you worked in a group on this project, please type the EIDs of your groupmates below (do not include yourself).
 Leave it as TODO otherwise.
-Groupmate 1: TODO
-Groupmate 2: TODO
+Groupmate 1: ltq85
+Groupmate 2: oea497
 """
 
 def load_pairs(filename):
@@ -39,16 +39,13 @@ def load_pairs(filename):
     """
     list_of_pairs = []
     with open(filename, 'rt') as infile:
-
-# ------------ BEGIN YOUR CODE ------------
-
-        
-        pass    # implement your code here
-
-
-# ------------ END YOUR CODE ------------
-
-    return list_of_pairs 
+        for line in infile:
+            line = line.strip()
+            if line:  # skip empty lines
+                parts = line.split()
+                if len(parts) == 2:
+                    list_of_pairs.append((parts[0], parts[1]))
+    return list_of_pairs
 
 def make_friends_directory(pairs):
     """Create a directory of persons, for looking up immediate friends
@@ -70,9 +67,19 @@ def make_friends_directory(pairs):
 
     # ------------ BEGIN YOUR CODE ------------
 
-    
-    pass    # implement your code here
+    for person1, person2 in pairs:
+        if person1 == person2:  # ignore self-relationships
+            continue
 
+        # Add person2 to person1's set
+        if person1 not in directory:
+            directory[person1] = set()
+        directory[person1].add(person2)
+
+        # Add person1 to person2's set
+        if person2 not in directory:
+            directory[person2] = set()
+        directory[person2].add(person1)
 
     # ------------ END YOUR CODE ------------
 
@@ -90,8 +97,12 @@ def find_all_number_of_friends(my_dir):
 
     # ------------ BEGIN YOUR CODE ------------
 
+    for person in my_dir:
+        num_friends = len(my_dir[person])
+        friends_list.append((person, num_friends))
 
-    pass    # implement your code here
+        # Sort descending by number of friends
+    friends_list = sorted(friends_list, key=lambda x: x[1], reverse=True)
     
 
     # ------------ END YOUR CODE ------------
@@ -119,11 +130,25 @@ def make_team_roster(person, my_dir):
     """
     assert person in my_dir
     label = person
-
+    team=set()
     # ------------ BEGIN YOUR CODE ------------
 
-    
-    pass    # implement your code here
+    # First level friends
+    first_level = my_dir[person]
+    team.update(first_level)
+
+    # Second level friends
+    for friend in first_level:
+        team.update(my_dir.get(friend, set()))
+
+    # Remove leader if present
+    team.discard(person)
+
+    # Sort alphabetically
+    sorted_team = sorted(team)
+
+    # Combine leader + sorted team
+    label = "_".join([person] + sorted_team)
 
 
     # ------------ END YOUR CODE ------------
@@ -135,19 +160,24 @@ def find_smallest_team(my_dir):
     """Find team with smallest size, and return its roster label str
     - if ties, return the team roster label that is first in ASCII order
     """
-    smallest_teams = []
+    if not my_dir:
+        return ""
 
-    # ------------ BEGIN YOUR CODE
+    smallest_roster = None
+    smallest_size = None
 
+    for person in my_dir:
+        roster = make_team_roster(person, my_dir)
+        size = len(roster.split("_"))
 
-    pass    # implement your code here
-
-    
-    # ------------ END YOUR CODE
-
-    return smallest_teams[0] if smallest_teams else ""
-
-
+        # First roster or smaller than current
+        if smallest_size is None or size < smallest_size:
+            smallest_size = size
+            smallest_roster = roster
+        # Same size, pick ASCII-first
+        elif size == smallest_size and roster < smallest_roster:
+            smallest_roster = roster
+    return smallest_roster
 
 if __name__ == '__main__':
     # To run and examine your function calls
@@ -166,7 +196,7 @@ if __name__ == '__main__':
     print('\n4. run make_team_roster')
     my_person = 'DARTHVADER'   # test with this person as team leader
     team_roster = make_team_roster(my_person, my_dir)
-    print(team_roster) 
+    print(team_roster)
 
     print('\n5. run find_smallest_team')
     print(find_smallest_team(my_dir))
@@ -174,8 +204,8 @@ if __name__ == '__main__':
     print('\n6. run Friends iterator')
     friends_iterator = Friends(my_dir)
     for num, pair in enumerate(friends_iterator):
-        print(num, pair)
-        if num == 10:
-            break
-    # since index 0 we read 11 elements
+         print(num, pair)
+         if num == 10:
+             break
+     # since index 0 we read 11 elements
     print(len(list(friends_iterator)) + num + 1)
